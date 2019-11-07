@@ -1,6 +1,9 @@
 ﻿#include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <iostream>
 using namespace std;
 
@@ -48,19 +51,23 @@ void checkCompiledShader(unsigned int shader) {
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 1) in vec3 aColor;\n"
+"layout (location = 2) in vec2 aTexCoord;\n"
 "out vec3 outColor;"
+"out vec2 TexCoord;"
 "void main(){\n"
 "    gl_Position = vec4(aPos,1.0f);\n"
 "	 outColor = aColor;"
+"	 TexCoord = aTexCoord;"
 "}\0";
 
 //
 const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 frageColor;\n"
+"out vec4 FragColor;\n"
 "in vec3 outColor;"
-"uniform vec4 color;\n"
+"in vec2 TexCoord;"
+"uniform sampler2D ourTexture;\n"
 "void main(){\n"
-"	frageColor = vec4(outColor,0.0f);\n"
+"	 FragColor = texture(ourTexture, TexCoord) * vec4(outColor, 1.0);\n"
 "}\0";
 
 int main() {
@@ -120,14 +127,11 @@ int main() {
 
 	//顶点
 	float vertices[] = {
-		0.5f, 0.5f, 0.0f,   // 右上角
-		1.0f, 0.0f, 0.0f,  //颜色
-		0.5f, -0.5f, 0.0f,  // 右下角
-		0.0, 1.0f, 0.0f,
-		-0.5f, -0.5f, 0.0f, // 左下角
-		1.0f, 0.0f, 0.0f,
-		-0.5f, 0.5f, 0.0f,   // 左上角
-		0.0f,  0.0f,  1.0f,
+		// positions          // colors           // texture coords
+		0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+		0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
 	};
 
 	unsigned int indices[] = { // 注意索引从0开始! 
@@ -151,16 +155,48 @@ int main() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     //链接顶点属性
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
 	//释放
 	// remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER,0);
 	glBindVertexArray(0);
+
+	//纹理
+	//float texCoods[] = {
+	//	0.0f,0.0f,
+	//	1.0f,0.0f,
+	//	0.5f,1.0f
+	//};
+
+	unsigned int texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	//环绕方式 repeat mirror_repeat clamp_edge clamp_border
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+	//纹理过滤
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	int width, height, nrChannels;
+	unsigned char *data = stbi_load("../res/container.jpg", &width, &height, &nrChannels, 0);
+
+	if (data) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else {
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -173,14 +209,13 @@ int main() {
 
 		glUseProgram(shaderProgram);
 
-		float time = glfwGetTime();
-		float color = (sin(time)+1.0)/2.0;
+		//float time = glfwGetTime();
+		//float color = (sin(time)+1.0)/2.0;
 		//std::cout << color << std::endl;
-		int uniform_location_color = glGetUniformLocation(shaderProgram, "color");
-		glUniform4f(uniform_location_color, 0.5f,0.5f,0.5f,color);
+		//int uniform_location_color = glGetUniformLocation(shaderProgram, "ourTexture");
+		//glUniform4f(uniform_location_color, 0.5f,0.5f,0.5f,color);
+		glBindTexture(GL_TEXTURE_2D, texture);
 		glBindVertexArray(VAO);
-
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);//交换颜色缓冲
