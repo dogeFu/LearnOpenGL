@@ -1,4 +1,4 @@
-#include <glad/glad.h> 
+ï»¿#include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 
 #include <iostream>
@@ -26,6 +26,43 @@ void checkCompiledShader(unsigned int shader) {
 	}
 }
 
+// å®šä¹‰è¾“å…¥è¾“å‡ºçš„ä¸¤ä¸ªç€è‰²å™¨
+//const char *vertexShaderSource = "#version 330 core\n"
+//"layout (location = 0) in vec3 aPos;\n"
+//"out vec4 color;\n"
+//"void main()\n"
+//"{\n"
+//"   gl_Position = vec4(aPos, 1.0);\n"
+//"   color = vec4(aPos,1.0);"
+//"}\0";
+
+//const char *fragmentShaderSource = "#version 330 core\n"
+//"out vec4 FragColor;\n"
+//"in vec4 color;\n"
+//"void main()\n"
+//"{\n"
+//"FragColor = color;\n"
+//"}\0";
+
+//uniform
+const char* vertexShaderSource = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"layout (location = 1) in vec3 aColor;\n"
+"out vec3 outColor;"
+"void main(){\n"
+"    gl_Position = vec4(aPos,1.0f);\n"
+"	 outColor = aColor;"
+"}\0";
+
+//
+const char* fragmentShaderSource = "#version 330 core\n"
+"out vec4 frageColor;\n"
+"in vec3 outColor;"
+"uniform vec4 color;\n"
+"void main(){\n"
+"	frageColor = vec4(outColor,0.0f);\n"
+"}\0";
+
 int main() {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -40,49 +77,37 @@ int main() {
 	}
 	glfwMakeContextCurrent(window);
 
-	//³õÊ¼»¯glad
+	//åˆå§‹åŒ–glad
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
-	glViewport(0, 0, 800, 600);//ÊÓ¿ÚÉèÖÃ  x y w h  ×óÏÂ½Ç
+	glViewport(0, 0, 800, 600);//è§†å£è®¾ç½®  x y w h  å·¦ä¸‹è§’
 
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);//ÉèÖÃ´°¿Ú´óĞ¡µ÷ÕûºóµÄ»Øµ÷
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);//è®¾ç½®çª—å£å¤§å°è°ƒæ•´åçš„å›è°ƒ
 
-
-																	  //¶¥µã×ÅÉ«Æ÷
+	
+	//é¡¶ç‚¹ç€è‰²å™¨
 	unsigned int vertexShader;
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	const char *vertexShaderSource = "#version 330 core\n"
-		"layout (location = 0) in vec3 aPos;\n"
-		"void main()\n"
-		"{\n"
-		"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-		"}\0";
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
 	checkCompiledShader(vertexShader);
 
-	//Æ¬¶Î×ÅÉ«Æ÷
-	const char *fragmentShaderSource = "#version 330 core\n"
-		"out vec4 FragColor;\n"
-		"void main()\n"
-		"{\n"
-		"FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-		"}\0";
+	//ç‰‡æ®µç€è‰²å™¨
 	unsigned int fragmentShader;
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
 	glCompileShader(fragmentShader);
 	checkCompiledShader(fragmentShader);
 
-	//×ÅÉ«Æ÷³ÌĞò
+	//ç€è‰²å™¨ç¨‹åº
 	unsigned int shaderProgram;
 	shaderProgram = glCreateProgram();
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);//°ó¶¨×ÅÉ«Æ÷È»ºóÁ¬½Óµ½³ÌĞò
+	glLinkProgram(shaderProgram);//ç»‘å®šç€è‰²å™¨ç„¶åè¿æ¥åˆ°ç¨‹åº
 	int success;
 	char infoLog[512];
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
@@ -93,39 +118,45 @@ int main() {
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	//¶¥µã
+	//é¡¶ç‚¹
 	float vertices[] = {
-		0.5f, 0.5f, 0.0f,   // ÓÒÉÏ½Ç
-		0.5f, -0.5f, 0.0f,  // ÓÒÏÂ½Ç
-		-0.5f, -0.5f, 0.0f, // ×óÏÂ½Ç
-		-0.5f, 0.5f, 0.0f   // ×óÉÏ½Ç
+		0.5f, 0.5f, 0.0f,   // å³ä¸Šè§’
+		1.0f, 0.0f, 0.0f,  //é¢œè‰²
+		0.5f, -0.5f, 0.0f,  // å³ä¸‹è§’
+		0.0, 1.0f, 0.0f,
+		-0.5f, -0.5f, 0.0f, // å·¦ä¸‹è§’
+		1.0f, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0.0f,   // å·¦ä¸Šè§’
+		0.0f,  0.0f,  1.0f,
 	};
 
-	unsigned int indices[] = { // ×¢ÒâË÷Òı´Ó0¿ªÊ¼! 
-		0, 1, 3, // µÚÒ»¸öÈı½ÇĞÎ
-		1, 2, 3  // µÚ¶ş¸öÈı½ÇĞÎ
+	unsigned int indices[] = { // æ³¨æ„ç´¢å¼•ä»0å¼€å§‹! 
+		0, 1, 3, // ç¬¬ä¸€ä¸ªä¸‰è§’å½¢
+		1, 2, 3  // ç¬¬äºŒä¸ªä¸‰è§’å½¢
 	};
 
-	//VBOÀ´±£´æ¶¨µãÊı¾İ
+	//VBOæ¥ä¿å­˜å®šç‚¹æ•°æ®
 	unsigned int VBO, VAO,EBO;
 
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);// µÚÒ»¸ö²ÎÊı n±íÃ÷ÒªÉú³ÉµÄBOÃû³Æ¸öÊı£¬  µÚ¶ş¸ö²ÎÊıarrayÖ¸ÏòÕâĞ©Ãû³Æ±£´æµÄÊı×é
+	glGenBuffers(1, &VBO);// ç¬¬ä¸€ä¸ªå‚æ•° nè¡¨æ˜è¦ç”Ÿæˆçš„BOåç§°ä¸ªæ•°ï¼Œ  ç¬¬äºŒä¸ªå‚æ•°arrayæŒ‡å‘è¿™äº›åç§°ä¿å­˜çš„æ•°ç»„
 	glGenBuffers(1,&EBO);
 
 	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);//°ó¶¨»º´æµ½VBO£¬Àí½âÎªÓ³Éä
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);//¸ø»º´æÉèÖÃÊı¾İ
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);//ç»‘å®šç¼“å­˜åˆ°VBOï¼Œç†è§£ä¸ºæ˜ å°„
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);//ç»™ç¼“å­˜è®¾ç½®æ•°æ®
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    //Á´½Ó¶¥µãÊôĞÔ
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    //é“¾æ¥é¡¶ç‚¹å±æ€§
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	//ÊÍ·Å
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	//é‡Šæ”¾
 	// remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -137,16 +168,23 @@ int main() {
 		processInput(window);
 
 		//render
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);//×´Ì¬ÉèÖÃ
-		glClear(GL_COLOR_BUFFER_BIT);//×´Ì¬Ê¹ÓÃ
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);//çŠ¶æ€è®¾ç½®
+		glClear(GL_COLOR_BUFFER_BIT);//çŠ¶æ€ä½¿ç”¨
 
 		glUseProgram(shaderProgram);
+
+		float time = glfwGetTime();
+		float color = (sin(time)+1.0)/2.0;
+		//std::cout << color << std::endl;
+		int uniform_location_color = glGetUniformLocation(shaderProgram, "color");
+		glUniform4f(uniform_location_color, 0.5f,0.5f,0.5f,color);
 		glBindVertexArray(VAO);
+
 		//glDrawArrays(GL_TRIANGLES, 0, 3);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-		glfwSwapBuffers(window);//½»»»ÑÕÉ«»º³å
-		glfwPollEvents();//¼ì²éÓĞÃ»ÓĞ´¥·¢Ê²Ã´ÊÂ¼ş£¨±ÈÈç¼üÅÌÊäÈë¡¢Êó±êÒÆ¶¯µÈ£©¡¢¸üĞÂ´°¿Ú×´Ì¬£¬²¢µ÷ÓÃ¶ÔÓ¦µÄ»Øµ÷º¯Êı
+		glfwSwapBuffers(window);//äº¤æ¢é¢œè‰²ç¼“å†²
+		glfwPollEvents();//æ£€æŸ¥æœ‰æ²¡æœ‰è§¦å‘ä»€ä¹ˆäº‹ä»¶ï¼ˆæ¯”å¦‚é”®ç›˜è¾“å…¥ã€é¼ æ ‡ç§»åŠ¨ç­‰ï¼‰ã€æ›´æ–°çª—å£çŠ¶æ€ï¼Œå¹¶è°ƒç”¨å¯¹åº”çš„å›è°ƒå‡½æ•°
 	}
 
 	glDeleteVertexArrays(1, &VAO);
