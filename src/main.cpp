@@ -4,6 +4,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <iostream>
 using namespace std;
 
@@ -143,7 +147,7 @@ int main() {
 	unsigned int VBO, VAO,EBO;
 
 	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);// 第一个参数 n表明要生成的BO名称个数，  第二个参数array指向这些名称保存的数组
+	glGenBuffers(1, &VBO);// 第一个参数 n表明要生成的VBO名称个数，  第二个参数array指向这些名称保存的数组
 	glGenBuffers(1,&EBO);
 
 	glBindVertexArray(VAO);
