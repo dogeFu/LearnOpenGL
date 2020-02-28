@@ -12,7 +12,9 @@ add_library(glad ${PROJECT_SOURCE_DIR}/dependencies/glad/glad.c)
 
 link_directories(${PROJECT_SOURCE_DIR}/dependencies/GLFW)
 
-add_executable(LearnOpenGL src/main.cpp)
+add_executable(LearnOpenGL 
+	src/main.cpp
+	src/shader_loader.cpp)
 
 target_link_libraries (LearnOpenGL glad)
 target_link_libraries (LearnOpenGL glfw3.lib)
